@@ -3,9 +3,6 @@ package com.example.filecompressor.ui.main
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,11 +29,11 @@ fun MainScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onCompressClick,
-                icon = { Icon(Icons.Filled.Add, contentDescription = "Compress") },
-                text = { Text("Compress Files") }
-            )
+            FloatingActionButton(
+                onClick = onCompressClick
+            ) { 
+                Text("+ Compress Files", modifier = Modifier.padding(horizontal = 16.dp)) 
+            }
         },
         modifier = modifier
     ) { innerPadding ->
@@ -86,11 +83,9 @@ fun ArchiveCard(name: String) {
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Filled.Folder,
-                contentDescription = "Archive",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp)
+            Text(
+                text = "📁",
+                style = MaterialTheme.typography.headlineSmall
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
@@ -109,11 +104,9 @@ fun EmptyState() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = Icons.Filled.Folder,
-            contentDescription = "Empty",
-            modifier = Modifier.size(64.dp),
-            tint = MaterialTheme.colorScheme.outline
+        Text(
+            text = "📁",
+            style = MaterialTheme.typography.displayLarge
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
