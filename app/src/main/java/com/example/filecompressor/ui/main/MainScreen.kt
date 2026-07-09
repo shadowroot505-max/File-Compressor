@@ -1,12 +1,17 @@
 package com.example.filecompressor.ui.main
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,26 +23,33 @@ fun MainScreen(
     onCompressClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showCreateFolderDialog by remember { mutableStateOf(false) }
+    var folderName by remember { mutableStateOf("") }
+    
+    // Mock state for folders
+    val folders = remember { mutableStateListOf("Taxes 2025", "Vacation Photos") }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("File Vault") },
+                title = { Text("File Vault", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
-                    IconButton(onClick = { /* TODO: Open Create Folder Dialog */ }) {
-                        Text("📁+", modifier = Modifier.padding(4.dp))
+                    IconButton(onClick = { showCreateFolderDialog = true }) {
+                        Text("📁+", style = MaterialTheme.typography.titleMedium)
                     }
                 }
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onCompressClick
+                onClick = onCompressClick,
+                containerColor = MaterialTheme.colorScheme.primary
             ) { 
-                Text("+ Compress Files", modifier = Modifier.padding(horizontal = 16.dp)) 
+                Text("+ Compress", modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.onPrimary) 
             }
         },
         modifier = modifier
@@ -47,10 +59,10 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Placeholder for Archives List
-            val mockArchives = listOf("Taxes_2025.vault", "Vacation_Photos.vault", "Project_Docs.vault")
-            
-            if (mockArchives.isEmpty()) {
+            // Space Analyzer (Mock)
+            SpaceAnalyzerCard()
+
+            if (folders.isEmpty()) {
                 EmptyState()
             } else {
                 LazyColumn(
@@ -59,23 +71,85 @@ fun MainScreen(
                 ) {
                     item {
                         Text(
-                            text = "Recent Archives",
+                            text = "My Vaults",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 8.dp)
+                            modifier = Modifier.padding(bottom = 4.dp)
                         )
                     }
-                    items(mockArchives) { archive ->
-                        ArchiveCard(name = archive)
+                    items(folders) { folder ->
+                        FolderCard(name = folder)
                     }
                 }
+            }
+        }
+    }
+
+    if (showCreateFolderDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateFolderDialog = false },
+            title = { Text("Create Secure Folder") },
+            text = {
+                OutlinedTextField(
+                    value = folderName,
+                    onValueChange = { folderName = it },
+                    label = { Text("Folder Name") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (folderName.isNotBlank()) {
+                        folders.add(folderName)
+                        folderName = ""
+                    }
+                    showCreateFolderDialog = false
+                }) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateFolderDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun SpaceAnalyzerCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column {
+                Text("Space Saved", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                Text("1.2 GB", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
+            }
+            // Mock Progress Circle
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .clip(RoundedCornerShape(30.dp))
+                    .background(Color(0xFF4CAF50)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("65%", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }
 }
 
 @Composable
-fun ArchiveCard(name: String) {
+fun FolderCard(name: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -89,13 +163,14 @@ fun ArchiveCard(name: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "📁",
+                text = "🗄️",
                 style = MaterialTheme.typography.headlineSmall
             )
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = name,
                 style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
@@ -105,17 +180,17 @@ fun ArchiveCard(name: String) {
 @Composable
 fun EmptyState() {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "📁",
+            text = "🗄️",
             style = MaterialTheme.typography.displayLarge
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "No archives yet.\nTap 'Compress Files' to start saving space!",
+            text = "Your vault is empty.\nCreate a folder to start organizing!",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
