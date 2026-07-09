@@ -25,7 +25,12 @@ fun MainScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { /* TODO: Open Create Folder Dialog */ }) {
+                        Text("📁+", modifier = Modifier.padding(4.dp))
+                    }
+                }
             )
         },
         floatingActionButton = {
