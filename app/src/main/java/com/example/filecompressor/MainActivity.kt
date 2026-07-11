@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import com.example.filecompressor.theme.FileCompressorTheme
 import com.example.filecompressor.ui.main.MainScreen
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.lifecycleScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
