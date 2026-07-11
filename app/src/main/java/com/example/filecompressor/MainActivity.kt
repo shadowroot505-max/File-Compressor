@@ -13,6 +13,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.filecompressor.theme.FileCompressorTheme
 import com.example.filecompressor.ui.main.MainScreen
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 class MainActivity : ComponentActivity() {
 
