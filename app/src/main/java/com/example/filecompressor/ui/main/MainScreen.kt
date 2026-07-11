@@ -173,6 +173,9 @@ fun EmptyState() {
 @Composable
 fun MainScreenPreview() {
     FileCompressorTheme {
-        MainScreen()
+        MainScreen(
+            folders = listOf("Preview Folder 1", "Preview Folder 2"),
+            onCreateFolder = {}
+        )
     }
 }
