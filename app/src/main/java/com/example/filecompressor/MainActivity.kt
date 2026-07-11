@@ -134,8 +134,9 @@ class MainActivity : ComponentActivity() {
                                 onRestoreFile = { file ->
                                     Toast.makeText(this, "Restoring file...", Toast.LENGTH_SHORT).show()
                                     lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                        val restoreDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS) ?: filesDir
-                                        val targetDir = File(restoreDir, "Restored_${folderName}_${System.currentTimeMillis()}")
+                                        // Target the public Download directory
+                                        val publicDownloadDir = File(android.os.Environment.getExternalStorageDirectory(), "Download")
+                                        val targetDir = File(publicDownloadDir, "Restored_${folderName}")
                                         targetDir.mkdirs()
                                         
                                         val success = ArchiveEngine.extractArchive(file, targetDir)
@@ -143,7 +144,7 @@ class MainActivity : ComponentActivity() {
                                             if (success) {
                                                 file.delete()
                                                 refreshFolderFiles()
-                                                Toast.makeText(this@MainActivity, "Restored to: ${targetDir.absolutePath} (Moved out of Vault)", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(this@MainActivity, "Restored to: Download/Restored_${folderName}", Toast.LENGTH_LONG).show()
                                             } else {
                                                 Toast.makeText(this@MainActivity, "Restoration failed", Toast.LENGTH_SHORT).show()
                                             }
