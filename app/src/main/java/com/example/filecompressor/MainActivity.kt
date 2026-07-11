@@ -35,12 +35,24 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen(
-                        onCompressClick = {
-                            // Filter for documents and images, explicitly excluding videos
-                            pickFilesLauncher.launch(arrayOf("image/*", "application/*", "text/*"))
-                        }
-                    )
+                    var currentScreen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("main") }
+
+                    if (currentScreen == "main") {
+                        MainScreen(
+                            onCompressClick = {
+                                pickFilesLauncher.launch(arrayOf("image/*", "application/*", "text/*"))
+                            },
+                            onSettingsClick = {
+                                currentScreen = "settings"
+                            }
+                        )
+                    } else if (currentScreen == "settings") {
+                        com.example.filecompressor.ui.main.SettingsScreen(
+                            onNavigateBack = {
+                                currentScreen = "main"
+                            }
+                        )
+                    }
                 }
             }
         }

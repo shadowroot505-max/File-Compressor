@@ -21,6 +21,7 @@ import com.example.filecompressor.theme.FileCompressorTheme
 @Composable
 fun MainScreen(
     onCompressClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showCreateFolderDialog by remember { mutableStateOf(false) }
@@ -32,7 +33,7 @@ fun MainScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("File Vault", fontWeight = FontWeight.Bold) },
+                title = { Text("File Vault", fontWeight = FontWeight.FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -40,6 +41,9 @@ fun MainScreen(
                 actions = {
                     IconButton(onClick = { showCreateFolderDialog = true }) {
                         Text("📁+", style = MaterialTheme.typography.titleMedium)
+                    }
+                    IconButton(onClick = onSettingsClick) {
+                        Text("⚙️", style = MaterialTheme.typography.titleMedium)
                     }
                 }
             )
