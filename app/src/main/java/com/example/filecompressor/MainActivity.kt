@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "Compressing ${uris.size} files to vault...", Toast.LENGTH_SHORT).show()
             
             // Run compression in a background thread
-            androidx.lifecycle.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                 // Ensure at least one folder exists to save to
                 var folders = folderManager.getFolders()
                 if (folders.isEmpty()) {
