@@ -21,7 +21,6 @@ import androidx.compose.runtime.remember
 class MainActivity : ComponentActivity() {
 
     private lateinit var folderManager: FolderManager
-    private var foldersState = mutableStateOf<List<String>>(emptyList())
 
     // File picker launcher that allows selecting multiple documents/images
     private val pickFilesLauncher = registerForActivityResult(
@@ -34,13 +33,13 @@ class MainActivity : ComponentActivity() {
             var deletedCount = 0
             for (uri in uris) {
                 try {
-                    // Attempt to delete original file via ContentResolver
-                    val deletedRows = contentResolver.delete(uri, null, null)
-                    if (deletedRows > 0) {
+                    // Use DocumentsContract for SAF URIs instead of direct ContentResolver delete
+                    val deleted = android.provider.DocumentsContract.deleteDocument(contentResolver, uri)
+                    if (deleted) {
                         deletedCount++
                     }
-                } catch (e: SecurityException) {
-                    // On Android 11+, we may need to ask for specific user permission via createDeleteRequest
+                } catch (e: Exception) {
+                    // Catch all exceptions (UnsupportedOperationException, SecurityException) to prevent crashes
                     e.printStackTrace()
                 }
             }
@@ -51,7 +50,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         folderManager = FolderManager(this)
-        foldersState.value = folderManager.getFolders()
         
         enableEdgeToEdge()
         setContent {
@@ -61,7 +59,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     var currentScreen by remember { mutableStateOf("main") }
-                    val currentFolders by foldersState
+                    var currentFolders by remember { mutableStateOf(folderManager.getFolders()) }
 
                     if (currentScreen == "main") {
                         MainScreen(
@@ -69,10 +67,10 @@ class MainActivity : ComponentActivity() {
                             onCreateFolder = { newFolderName ->
                                 val success = folderManager.createFolder(newFolderName)
                                 if (success) {
-                                    foldersState.value = folderManager.getFolders()
-                                    Toast.makeText(this, "Folder Created", Toast.LENGTH_SHORT).show()
+                                    currentFolders = folderManager.getFolders()
+                                    Toast.makeText(this@MainActivity, "Folder Created", Toast.LENGTH_SHORT).show()
                                 } else {
-                                    Toast.makeText(this, "Folder already exists", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(this@MainActivity, "Folder already exists", Toast.LENGTH_SHORT).show()
                                 }
                             },
                             onCompressClick = {
