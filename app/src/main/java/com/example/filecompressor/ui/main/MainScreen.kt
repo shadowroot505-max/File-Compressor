@@ -22,6 +22,7 @@ import com.example.filecompressor.theme.FileCompressorTheme
 fun MainScreen(
     folders: List<String>,
     onCreateFolder: (String) -> Unit,
+    onFolderClick: (String) -> Unit,
     onCompressClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -78,7 +79,7 @@ fun MainScreen(
                         )
                     }
                     items(folders) { folder ->
-                        FolderCard(name = folder)
+                        FolderCard(name = folder, onClick = { onFolderClick(folder) })
                     }
                 }
             }
@@ -120,9 +121,11 @@ fun MainScreen(
 
 
 @Composable
-fun FolderCard(name: String) {
+fun FolderCard(name: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )
@@ -175,7 +178,8 @@ fun MainScreenPreview() {
     FileCompressorTheme {
         MainScreen(
             folders = listOf("Preview Folder 1", "Preview Folder 2"),
-            onCreateFolder = {}
+            onCreateFolder = {},
+            onFolderClick = {}
         )
     }
 }
