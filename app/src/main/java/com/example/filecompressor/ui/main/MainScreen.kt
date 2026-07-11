@@ -20,15 +20,14 @@ import com.example.filecompressor.theme.FileCompressorTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
+    folders: List<String>,
+    onCreateFolder: (String) -> Unit,
     onCompressClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showCreateFolderDialog by remember { mutableStateOf(false) }
     var folderName by remember { mutableStateOf("") }
-    
-    // Mock state for folders
-    val folders = remember { mutableStateListOf("Taxes 2025", "Vacation Photos") }
 
     Scaffold(
         topBar = {
@@ -63,9 +62,6 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Space Analyzer (Mock)
-            SpaceAnalyzerCard()
-
             if (folders.isEmpty()) {
                 EmptyState()
             } else {
@@ -104,7 +100,7 @@ fun MainScreen(
             confirmButton = {
                 TextButton(onClick = {
                     if (folderName.isNotBlank()) {
-                        folders.add(folderName)
+                        onCreateFolder(folderName)
                         folderName = ""
                     }
                     showCreateFolderDialog = false
@@ -121,36 +117,7 @@ fun MainScreen(
     }
 }
 
-@Composable
-fun SpaceAnalyzerCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("Space Saved", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
-                Text("1.2 GB", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSecondaryContainer)
-            }
-            // Mock Progress Circle
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(30.dp))
-                    .background(Color(0xFF4CAF50)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("65%", color = Color.White, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
+
 
 @Composable
 fun FolderCard(name: String) {
