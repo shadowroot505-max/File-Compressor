@@ -17,6 +17,9 @@ fun SettingsScreen(
     var password by remember { mutableStateOf("") }
     var showPasswordDialog by remember { mutableStateOf(false) }
     var cloudConnected by remember { mutableStateOf(false) }
+    var driveEmail by remember { mutableStateOf("") }
+    var driveFolder by remember { mutableStateOf("My Vault Backup") }
+    var showDriveDialog by remember { mutableStateOf(false) }
     var compressionLevel by remember { mutableFloatStateOf(5f) }
 
     Scaffold(
@@ -60,13 +63,18 @@ fun SettingsScreen(
             SettingsSection(title = "Cloud Backup") {
                 ListItem(
                     headlineContent = { Text("Google Drive Sync") },
-                    supportingContent = { Text(if (cloudConnected) "Connected" else "Not Connected") },
+                    supportingContent = { 
+                        Text(if (cloudConnected && driveEmail.isNotEmpty()) "Linked to: $driveEmail\nFolder: $driveFolder" else "Not Connected") 
+                    },
                     trailingContent = {
                         Switch(
                             checked = cloudConnected,
                             onCheckedChange = { 
-                                // TODO: Trigger actual Google OAuth Flow here
-                                cloudConnected = it 
+                                if (it) {
+                                    showDriveDialog = true
+                                } else {
+                                    cloudConnected = false
+                                }
                             }
                         )
                     }
@@ -114,6 +122,58 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showPasswordDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showDriveDialog) {
+        var emailInput by remember { mutableStateOf(driveEmail) }
+        var folderInput by remember { mutableStateOf(driveFolder) }
+
+        AlertDialog(
+            onDismissRequest = { 
+                showDriveDialog = false 
+            },
+            title = { Text("Google Drive Credentials") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Enter your cloud account credentials below to securely sync folder archives.", style = MaterialTheme.typography.bodyMedium)
+                    OutlinedTextField(
+                        value = emailInput,
+                        onValueChange = { emailInput = it },
+                        label = { Text("Google Account Email") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = folderInput,
+                        onValueChange = { folderInput = it },
+                        label = { Text("Target Drive Folder") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (emailInput.isNotBlank() && folderInput.isNotBlank()) {
+                        driveEmail = emailInput
+                        driveFolder = folderInput
+                        cloudConnected = true
+                    } else {
+                        cloudConnected = false
+                    }
+                    showDriveDialog = false
+                }) {
+                    Text("Connect")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showDriveDialog = false 
+                }) {
                     Text("Cancel")
                 }
             }

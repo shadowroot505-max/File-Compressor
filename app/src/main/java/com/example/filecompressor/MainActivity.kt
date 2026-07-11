@@ -141,7 +141,9 @@ class MainActivity : ComponentActivity() {
                                         val success = ArchiveEngine.extractArchive(file, targetDir)
                                         launch(kotlinx.coroutines.Dispatchers.Main) {
                                             if (success) {
-                                                Toast.makeText(this@MainActivity, "Restored to: ${targetDir.absolutePath}", Toast.LENGTH_LONG).show()
+                                                file.delete()
+                                                refreshFolderFiles()
+                                                Toast.makeText(this@MainActivity, "Restored to: ${targetDir.absolutePath} (Moved out of Vault)", Toast.LENGTH_LONG).show()
                                             } else {
                                                 Toast.makeText(this@MainActivity, "Restoration failed", Toast.LENGTH_SHORT).show()
                                             }
