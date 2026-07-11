@@ -1,5 +1,8 @@
 package com.example.filecompressor
 
+import android.content.Context
+import android.net.Uri
+import android.provider.OpenableColumns
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -25,6 +28,46 @@ object ArchiveEngine {
                                 val entry = ZipEntry(file.name)
                                 zos.putNextEntry(entry)
                                 
+                                val buffer = ByteArray(1024)
+                                var count: Int
+                                while (bis.read(buffer).also { count = it } != -1) {
+                                    zos.write(buffer, 0, count)
+                                }
+                                zos.closeEntry()
+                            }
+                        }
+                    }
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun compressUris(context: Context, uris: List<Uri>, zipFile: File): Boolean {
+        return try {
+            val contentResolver = context.contentResolver
+            FileOutputStream(zipFile).use { fos ->
+                ZipOutputStream(BufferedOutputStream(fos)).use { zos ->
+                    for (uri in uris) {
+                        // Get original file name
+                        var fileName = "file_${System.currentTimeMillis()}"
+                        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                            if (cursor.moveToFirst()) {
+                                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                                if (nameIndex >= 0) {
+                                    fileName = cursor.getString(nameIndex)
+                                }
+                            }
+                        }
+
+                        contentResolver.openInputStream(uri)?.use { inputStream ->
+                            BufferedInputStream(inputStream).use { bis ->
+                                val entry = ZipEntry(fileName)
+                                zos.putNextEntry(entry)
+
                                 val buffer = ByteArray(1024)
                                 var count: Int
                                 while (bis.read(buffer).also { count = it } != -1) {

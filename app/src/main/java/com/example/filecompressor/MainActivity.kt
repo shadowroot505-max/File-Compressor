@@ -17,6 +17,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.launch
+import java.io.File
 
 class MainActivity : ComponentActivity() {
 
@@ -27,23 +29,42 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris: List<Uri> ->
         if (uris.isNotEmpty()) {
-            Toast.makeText(this, "Compressing and moving ${uris.size} files to vault...", Toast.LENGTH_SHORT).show()
-            // Here we would pass the URIs to the ArchiveEngine.
-            // For now, we simulate success and attempt to delete the original files.
-            var deletedCount = 0
-            for (uri in uris) {
-                try {
-                    // Use DocumentsContract for SAF URIs instead of direct ContentResolver delete
-                    val deleted = android.provider.DocumentsContract.deleteDocument(contentResolver, uri)
-                    if (deleted) {
-                        deletedCount++
+            Toast.makeText(this, "Compressing ${uris.size} files to vault...", Toast.LENGTH_SHORT).show()
+            
+            // Run compression in a background thread
+            androidx.lifecycle.lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                // Ensure at least one folder exists to save to
+                var folders = folderManager.getFolders()
+                if (folders.isEmpty()) {
+                    folderManager.createFolder("My Vault")
+                    folders = folderManager.getFolders()
+                }
+                
+                val targetFolder = java.io.File(File(filesDir, "VaultData"), folders.first())
+                val zipFile = java.io.File(targetFolder, "Archive_${System.currentTimeMillis()}.zip")
+                
+                val success = ArchiveEngine.compressUris(this@MainActivity, uris, zipFile)
+                
+                if (success) {
+                    var deletedCount = 0
+                    for (uri in uris) {
+                        try {
+                            val deleted = android.provider.DocumentsContract.deleteDocument(contentResolver, uri)
+                            if (deleted) deletedCount++
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
-                } catch (e: Exception) {
-                    // Catch all exceptions (UnsupportedOperationException, SecurityException) to prevent crashes
-                    e.printStackTrace()
+                    
+                    launch(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Saved to ${folders.first()}! Originals deleted: $deletedCount", Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    launch(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(this@MainActivity, "Compression failed", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
-            Toast.makeText(this, "Moved $deletedCount files to vault (Originals deleted)", Toast.LENGTH_LONG).show()
         }
     }
 
