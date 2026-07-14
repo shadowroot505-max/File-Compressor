@@ -168,19 +168,8 @@ class MainActivity : ComponentActivity() {
                                     selectedFolder.value = null
                                 },
                                 onRestoreFile = { file ->
-                                    Toast.makeText(this, "Restoring file...", Toast.LENGTH_SHORT).show()
-                                    lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                        val success = ArchiveEngine.extractZipToDownloads(this@MainActivity, file)
-                                        launch(kotlinx.coroutines.Dispatchers.Main) {
-                                            if (success) {
-                                                file.delete()
-                                                refreshFolderFiles()
-                                                Toast.makeText(this@MainActivity, "Restored to Downloads/VaultRestored! (Removed from Vault)", Toast.LENGTH_LONG).show()
-                                            } else {
-                                                Toast.makeText(this@MainActivity, "Restoration failed", Toast.LENGTH_SHORT).show()
-                                            }
-                                        }
-                                    }
+                                    pendingRestoreFile = file
+                                    restoreFolderLauncher.launch(null)
                                 },
                                 onDeleteFile = { file ->
                                     val deleted = file.delete()
