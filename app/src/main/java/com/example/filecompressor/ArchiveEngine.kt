@@ -86,12 +86,6 @@ object ArchiveEngine {
         }
     }
 
-    /**
-     * Extracts a ZIP archive to a destination directory.
-     * @param zipFile The ZIP file to extract.
-     * @param destDir The directory where files will be extracted.
-     * @return true if successful, false otherwise.
-     */
     fun extractArchive(zipFile: File, destDir: File): Boolean {
         return try {
             if (!destDir.exists()) destDir.mkdirs()
@@ -124,6 +118,7 @@ object ArchiveEngine {
                             }
                         }
                         zis.closeEntry()
+                    }
                 }
             }
             true

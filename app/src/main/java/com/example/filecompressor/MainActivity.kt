@@ -21,7 +21,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.animation.core.*
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
 import androidx.compose.runtime.LaunchedEffect
