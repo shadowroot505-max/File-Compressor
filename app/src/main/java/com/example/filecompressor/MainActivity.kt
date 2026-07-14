@@ -18,6 +18,15 @@ import androidx.lifecycle.lifecycleScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.animation.core.*
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Text
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -26,6 +35,29 @@ class MainActivity : ComponentActivity() {
     private lateinit var folderManager: FolderManager
     private var selectedFolder = mutableStateOf<String?>(null)
     private var folderFiles = mutableStateOf<List<File>>(emptyList())
+    private var pendingRestoreFile: File? = null
+
+    // Register SAF Document Tree launcher for restoring files
+    private val restoreFolderLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { treeUri: Uri? ->
+        if (treeUri != null && pendingRestoreFile != null) {
+            Toast.makeText(this, "Restoring files to selected folder...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                val success = ArchiveEngine.extractZipToSaf(this@MainActivity, pendingRestoreFile!!, treeUri)
+                launch(kotlinx.coroutines.Dispatchers.Main) {
+                    if (success) {
+                        pendingRestoreFile!!.delete()
+                        refreshFolderFiles()
+                        Toast.makeText(this@MainActivity, "Restoration complete (Removed from Vault)", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this@MainActivity, "Restoration failed", Toast.LENGTH_SHORT).show()
+                    }
+                    pendingRestoreFile = null
+                }
+            }
+        }
+    }
 
     private fun refreshFolderFiles() {
         val folder = selectedFolder.value
@@ -90,12 +122,14 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    var currentScreen by remember { mutableStateOf("main") }
+                    var currentScreen by remember { mutableStateOf("splash") }
                     var currentFolders by remember { mutableStateOf(folderManager.getFolders()) }
                     val currentFolderFiles by folderFiles
                     val activeFolder by selectedFolder
 
-                    if (currentScreen == "main") {
+                    if (currentScreen == "splash") {
+                        SplashScreen(onTimeout = { currentScreen = "main" })
+                    } else if (currentScreen == "main") {
                         MainScreen(
                             folders = currentFolders,
                             onCreateFolder = { newFolderName ->
@@ -134,17 +168,12 @@ class MainActivity : ComponentActivity() {
                                 onRestoreFile = { file ->
                                     Toast.makeText(this, "Restoring file...", Toast.LENGTH_SHORT).show()
                                     lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                        // Target the public Download directory
-                                        val publicDownloadDir = File(android.os.Environment.getExternalStorageDirectory(), "Download")
-                                        val targetDir = File(publicDownloadDir, "Restored_${folderName}")
-                                        targetDir.mkdirs()
-                                        
-                                        val success = ArchiveEngine.extractArchive(file, targetDir)
+                                        val success = ArchiveEngine.extractZipToDownloads(this@MainActivity, file)
                                         launch(kotlinx.coroutines.Dispatchers.Main) {
                                             if (success) {
                                                 file.delete()
                                                 refreshFolderFiles()
-                                                Toast.makeText(this@MainActivity, "Restored to: Download/Restored_${folderName}", Toast.LENGTH_LONG).show()
+                                                Toast.makeText(this@MainActivity, "Restored to Downloads/VaultRestored! (Removed from Vault)", Toast.LENGTH_LONG).show()
                                             } else {
                                                 Toast.makeText(this@MainActivity, "Restoration failed", Toast.LENGTH_SHORT).show()
                                             }
@@ -174,6 +203,56 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SplashScreen(onTimeout: () -> Unit) {
+    var startAnimation by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(
+        targetValue = if (startAnimation) 1.2f else 0.5f,
+        animationSpec = tween(durationMillis = 1000, easing = LinearOutSlowInEasing),
+        label = "scale"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (startAnimation) 1f else 0f,
+        animationSpec = tween(durationMillis = 1000),
+        label = "alpha"
+    )
+
+    LaunchedEffect(key1 = true) {
+        startAnimation = true
+        kotlinx.coroutines.delay(2000)
+        onTimeout()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "🗄️",
+                style = androidx.compose.ui.text.TextStyle(fontSize = 100.sp),
+                modifier = Modifier.graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    alpha = alpha
+                )
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Secure File Vault",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.graphicsLayer(alpha = alpha)
+            )
         }
     }
 }
